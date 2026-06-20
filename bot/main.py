@@ -21,8 +21,12 @@ async def webhook(request: Request):
         log.error(f"Invalid payload: {e}")
         return {"ok": False, "error": "invalid_json"}
 
-    direction = data.get("direction", "NONE")
-    if direction == "NONE":
+    direction = str(data.get("direction", "NONE")).strip()
+    if direction == "1":
+        direction = "BUY"
+    elif direction == "-1":
+        direction = "SELL"
+    if direction not in ("BUY", "SELL"):
         return {"ok": True, "skipped": True}
 
     symbol = data.get("symbol", "???")

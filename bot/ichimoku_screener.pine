@@ -63,6 +63,7 @@ sell_signal = tk_bearish and close_below_cloud and chikou_below_close and chikou
 // ─── Plot Signals ───
 plotshape(buy_signal, style=shape.triangleup, location=location.belowbar, color=color.green, size=size.small)
 plotshape(sell_signal, style=shape.triangledown, location=location.abovebar, color=color.red, size=size.small)
+plot(buy_signal ? 1 : sell_signal ? -1 : 0, "Signal", display=display.none)
 
 // ─── Alert Condition ───
 // Message: user-set in TV Alert dialog (see setup instructions)
