@@ -1,0 +1,21 @@
+# Environment
+.env
+tv_auth.json
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# Screenshots & debug
+screenshots/
+debug_*.png
+debug_*.html
+debug_*.json
+
+# OS
+Thumbs.db
+.DS_Store

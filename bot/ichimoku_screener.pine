@@ -1,0 +1,69 @@
+//@version=5
+indicator(title="Ichimoku Screener H4", overlay=true, format=format.price)
+
+// ─── Parameters ───
+tenkan_period = input.int(9, "Tenkan Period")
+kijun_period  = input.int(26, "Kijun Period")
+senkou_b_period = input.int(52, "Senkou B Period")
+use_future_kumo = input.bool(true, "Use Future Kumo Confirm")
+
+// ─── Manual Ichimoku Calculation ───
+tenkan = (ta.highest(high, tenkan_period) + ta.lowest(low, tenkan_period)) / 2
+kijun  = (ta.highest(high, kijun_period) + ta.lowest(low, kijun_period)) / 2
+senkouA = (tenkan + kijun) / 2
+senkouB = (ta.highest(high, senkou_b_period) + ta.lowest(low, senkou_b_period)) / 2
+
+// ─── Plot with standard Ichimoku offset ───
+plot(tenkan, "Tenkan-sen", color=color.red, linewidth=1)
+plot(kijun, "Kijun-sen", color=color.blue, linewidth=1)
+p1 = plot(senkouA, "Senkou A", color=color.green, linewidth=1, offset=kijun_period)
+p2 = plot(senkouB, "Senkou B", color=color.maroon, linewidth=1, offset=kijun_period)
+fill(p1, p2, color=color.new(color.green, 90), title="Bullish Kumo")
+fill(p1, p2, color=color.new(color.maroon, 90), title="Bearish Kumo")
+plot(close, "Chikou Span", color=color.purple, linewidth=1, offset=-kijun_period)
+
+// ─── Condition 1: TK Cross ───
+tk_bullish = tenkan[2] > kijun[2] and tenkan[1] > kijun[1] and tenkan[0] <= kijun[0]
+tk_bearish = tenkan[2] < kijun[2] and tenkan[1] < kijun[1] and tenkan[0] >= kijun[0]
+
+// ─── Condition 2: Close vs Cloud at bar 1 ───
+cloud_top    = math.max(senkouA[1], senkouB[1])
+cloud_bottom = math.min(senkouA[1], senkouB[1])
+close_above_cloud = close[1] > cloud_top
+close_below_cloud = close[1] < cloud_bottom
+
+// ─── Condition 3: Chikou vs Close 26 bars ago ───
+chikou_above_close = close[1] > close[kijun_period + 1]
+chikou_below_close = close[1] < close[kijun_period + 1]
+
+// ─── Condition 4: Chikou vs High/Low 26 bars ago ───
+chikou_above_high = close[1] > high[kijun_period + 1]
+chikou_below_low  = close[1] < low[kijun_period + 1]
+
+// ─── Condition 5: Chikou vs Cloud 26 bars ago ───
+cloud_top_ref    = math.max(senkouA[kijun_period + 1], senkouB[kijun_period + 1])
+cloud_bottom_ref = math.min(senkouA[kijun_period + 1], senkouB[kijun_period + 1])
+chikou_above_cloud_ref = close[1] > cloud_top_ref
+chikou_below_cloud_ref = close[1] < cloud_bottom_ref
+
+// ─── Condition 6: Current Cloud ───
+current_cloud_bullish = senkouA[1] > senkouB[1]
+current_cloud_bearish = senkouA[1] < senkouB[1]
+
+// ─── Condition 7: Future Cloud ───
+future_cloud_bullish = senkouA[0] > senkouB[0]
+future_cloud_bearish = senkouA[0] < senkouB[0]
+
+// ─── 7-Condition BUY ───
+buy_signal = tk_bullish and close_above_cloud and chikou_above_close and chikou_above_high and chikou_above_cloud_ref and current_cloud_bullish and (not use_future_kumo or future_cloud_bullish)
+
+// ─── 7-Condition SELL ───
+sell_signal = tk_bearish and close_below_cloud and chikou_below_close and chikou_below_low and chikou_below_cloud_ref and current_cloud_bearish and (not use_future_kumo or future_cloud_bearish)
+
+// ─── Plot Signals ───
+plotshape(buy_signal, style=shape.triangleup, location=location.belowbar, color=color.green, size=size.small)
+plotshape(sell_signal, style=shape.triangledown, location=location.abovebar, color=color.red, size=size.small)
+
+// ─── Alert Condition ───
+// Message: user-set in TV Alert dialog (see setup instructions)
+alertcondition(buy_signal or sell_signal, title="Ichimoku Signal", message="Ichimoku Signal Triggered")
