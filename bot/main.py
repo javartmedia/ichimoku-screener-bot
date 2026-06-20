@@ -12,6 +12,10 @@ log = logging.getLogger(__name__)
 
 app = FastAPI(title="Ichimoku Screener Bot")
 
+@app.get("/webhook")
+async def webhook_get():
+    return {"message": "This endpoint accepts POST requests from TradingView alerts. Use /health for status."}
+
 @app.post("/webhook")
 async def webhook(request: Request):
     try:
